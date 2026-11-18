@@ -1,0 +1,30 @@
+# One command, whole stack (the legacy shop + the agent's chat UI):
+#
+#     docker compose up --build         then open  http://localhost:8501
+#
+# Stop:                       docker compose down
+# Reset the shop's data too:  docker compose down -v
+# Terminal chat instead:      docker compose run --rm agent python run_agent.py
+#
+# Needs a .env file here (copy .env.example and add your GROQ_API_KEY). Stop any shop you started by hand
+# from ../legacy-shop first: both would use port 8080 and the container name "legacy-shop".
+include:
+  - ../legacy-shop/docker-compose.yml     # the shop, with its own settings and healthcheck
+
+services:
+  agent:
+    build: .
+    image: codebasics/shopmaster-agent:1.0
+    container_name: shopmaster-agent
+    ports:
+      - "8501:8501"
+    env_file:
+      - path: .env                         # your keys: GROQ_API_KEY, GOOGLE_API_KEY, LangSmith...
+        required: false                    # no .env: the page starts and tells you the key is missing
+    environment:
+      # Inside Docker the shop is reached by its service name, not localhost (this wins over .env).
+      SHOPMASTER_BASE_URL: http://legacy-shop:8080/legacy
+    depends_on:
+      legacy-shop:
+        condition: service_healthy         # wait until the shop answers
+    restart: unless-stopped

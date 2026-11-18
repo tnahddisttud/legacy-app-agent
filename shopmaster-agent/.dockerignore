@@ -1,0 +1,17 @@
+# Secrets and local state must never get into the image
+.env
+*.db
+*.db-*
+
+# Local environment and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Not needed to run the app
+tests/
+.git/
+Dockerfile
+docker-compose.yml
+*.excalidraw

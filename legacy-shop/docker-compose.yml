@@ -1,0 +1,29 @@
+# One command:  docker compose up --build
+# Reset data:   docker compose down -v
+services:
+  legacy-shop:
+    build: .
+    image: codebasics/legacy-shop:1.0
+    container_name: legacy-shop
+    ports:
+      - "8080:8080"
+    environment:
+      SHOP_USER: "svc_agent"
+      SHOP_PASS: "Winter2009!"
+      SHOP_TOKEN_TTL_SEC: "300"        # token lifetime (5 min)
+      SHOP_RATE_MAX: "15"              # requests per window, per token
+      SHOP_RATE_WINDOW_SEC: "10"
+      SHOP_CHAOS_ERROR_RATE: "0.05"    # random HTML 500s; set 0 for a calm demo
+      SHOP_CHAOS_MAX_LATENCY_MS: "250" # random latency; set 0 to disable
+      SHOP_CHAOS_POST_COMMIT_ERROR_RATE: "0"  # e.g. 0.3: order is SAVED but the API answers 500
+    volumes:
+      - shop-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  shop-data:
